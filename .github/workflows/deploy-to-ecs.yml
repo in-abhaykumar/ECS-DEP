@@ -54,7 +54,6 @@ jobs:
       #       --region ${{ secrets.AWS_REGION }} 
       - name: Update ECS Task Definition JSON with Secrets
         run: |
-        # Replace placeholders with actual values
           sed -i "s|\${ECS_TASK_FAMILY}|${{ secrets.ECS_TASK_FAMILY }}|g" .github/task-definition.json
           sed -i "s|\${ECS_EXECUTION_ROLE_ARN}|${{ secrets.ECS_EXECUTION_ROLE_ARN }}|g" .github/task-definition.json
           sed -i "s|\${AWS_ACCOUNT_ID}|${{ secrets.AWS_ACCOUNT_ID }}|g" .github/task-definition.json
