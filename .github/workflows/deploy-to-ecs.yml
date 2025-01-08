@@ -76,3 +76,4 @@ jobs:
             --service ${{ secrets.ECS_SERVICE_NAME }} \
             --task-definition ${{ steps.register-task.outputs.task-definition-arn }} \
             --region ${{ secrets.AWS_REGION }}
+            
