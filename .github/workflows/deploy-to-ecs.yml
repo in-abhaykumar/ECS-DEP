@@ -51,34 +51,22 @@ jobs:
       #       --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
       #       --service ${{ secrets.ECS_SERVICE_NAME }} \
       #       --force-new-deployment \
-      #       --region ${{ secrets.AWS_REGION }}
+      #       --region ${{ secrets.AWS_REGION }} 
+      - name: Update ECS Task Definition JSON with Secrets
+        run: |
+        # Replace placeholders with actual values
+          sed -i "s|\${ECS_TASK_FAMILY}|${{ secrets.ECS_TASK_FAMILY }}|g" .github/task-definition.json
+          sed -i "s|\${ECS_EXECUTION_ROLE_ARN}|${{ secrets.ECS_EXECUTION_ROLE_ARN }}|g" .github/task-definition.json
+          sed -i "s|\${AWS_ACCOUNT_ID}|${{ secrets.AWS_ACCOUNT_ID }}|g" .github/task-definition.json
+          sed -i "s|\${AWS_REGION}|${{ secrets.AWS_REGION }}|g" .github/task-definition.json
+          sed -i "s|\${ECR_REPOSITORY_NAME}|${{ secrets.ECR_REPOSITORY_NAME }}|g" .github/task-definition.json
 
       - name: Register ECS Task Definition
         id: register-task
         run: |
-          NEW_TASK_DEFINITION=$(aws ecs register-task-definition \
-            --family ${{ secrets.ECS_TASK_FAMILY }} \
-            --execution-role-arn ${{ secrets.ECS_EXECUTION_ROLE_ARN }} \
-            --network-mode awsvpc \
-            --requires-compatibilities FARGATE \
-            --cpu "256" \
-            --memory "512" \
-            --container-definitions '[{
-              "name": "container1",
-              "image": "'${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:latest'",
-              "memory": 512,
-              "cpu": 256,
-              "essential": true,
-              "portMappings": [{
-                "containerPort": 8080,
-                "hostPort": 8080,
-                "protocol": "tcp"
-              }]
-            }]' \
-            --region ${{ secrets.AWS_REGION }})
-
-          echo "Task definition registered: $NEW_TASK_DEFINITION"
-          echo "::set-output name=task-definition-arn::$(echo $NEW_TASK_DEFINITION | jq -r '.taskDefinition.taskDefinitionArn')"
+         NEW_TASK_DEFINITION=$(aws ecs register-task-definition --cli-input-json file://.github/task-definition.json --region ${{ secrets.AWS_REGION }})
+         echo "Task definition registered: $NEW_TASK_DEFINITION"
+         echo "::set-output name=task-definition-arn::$(echo $NEW_TASK_DEFINITION | jq -r '.taskDefinition.taskDefinitionArn')"
 
       # Update the ECS Service
       - name: Update ECS Service
