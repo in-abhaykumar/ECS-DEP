@@ -44,11 +44,43 @@ jobs:
           docker push $IMAGE_URI:latest
           docker push $IMAGE_URI:${{ github.sha }}
 
-      # Update ECS Service to Force Deployment
+      # # Update ECS Service to Force Deployment
+      # - name: Update ECS Service
+      #   run: |
+      #     aws ecs update-service \
+      #       --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
+      #       --service ${{ secrets.ECS_SERVICE_NAME }} \
+      #       --force-new-deployment \
+      #       --region ${{ secrets.AWS_REGION }}
+
+      - name: Register ECS Task Definition
+        id: register-task
+        run: |
+          NEW_TASK_DEFINITION=$(aws ecs register-task-definition \
+            --family ${{ secrets.ECS_TASK_FAMILY }} \
+            --execution-role-arn ${{ secrets.ECS_EXECUTION_ROLE_ARN }} \
+            --container-definitions '[{
+              "name": "container-name",
+              "image": "'${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY_NAME }}:latest'",
+              "memory": 512,
+              "cpu": 256,
+              "essential": true,
+              "portMappings": [{
+                "containerPort": 8080,
+                "hostPort": 8080,
+                "protocol": "tcp"
+              }]
+            }]' \
+            --region ${{ secrets.AWS_REGION }})
+
+          echo "Task definition registered: $NEW_TASK_DEFINITION"
+          echo "::set-output name=task-definition-arn::$(echo $NEW_TASK_DEFINITION | jq -r '.taskDefinition.taskDefinitionArn')"
+
+      # Update the ECS Service
       - name: Update ECS Service
         run: |
           aws ecs update-service \
             --cluster ${{ secrets.ECS_CLUSTER_NAME }} \
             --service ${{ secrets.ECS_SERVICE_NAME }} \
-            --force-new-deployment \
+            --task-definition ${{ steps.register-task.outputs.task-definition-arn }} \
             --region ${{ secrets.AWS_REGION }}
