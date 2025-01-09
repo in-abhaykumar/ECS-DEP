@@ -19,7 +19,11 @@ phases:
       - docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY_NAME:latest
   post_build:
     commands:
-      - echo "Build and Push completed"
+      - echo Creating image definitions...
+      - printf '[{"name":"container1","imageUri":"%s.dkr.ecr.%s.amazonaws.com/%s:latest"}]' $AWS_ACCOUNT_ID $AWS_REGION $ECR_REPOSITORY_NAME > imagedefinitions.json
+      - echo Build and Push completed.
+
 artifacts:
   files:
     - '**/*'
+    - imagedefinitions.json
