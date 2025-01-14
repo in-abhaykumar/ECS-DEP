@@ -31,20 +31,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Wait for SonarQube to start
-        run: sleep 120  # Wait for SonarQube to fully initialize
-
-      - name: Test connection to SonarQube
-        run: curl -f http://localhost:9000/api/system/ping
-
-      - name: Run SonarQube analysis
+      - name: SonarQube scan
+        uses: sonarsource/sonarqube-scan-action@main
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          curl -sSLo sonarqube-scanner-cli.zip https://github.com/SonarSource/sonar-scanner-cli/releases/download/4.6.2.2472/sonar-scanner-cli-4.6.2.2472-linux.zip
-          unzip sonarqube-scanner-cli.zip
-          ./sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner \
-            -Dsonar.projectKey=sonar-github \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          SONAR_HOAT_URL: ${{ secrets.SONAR_HOST_URL }}
