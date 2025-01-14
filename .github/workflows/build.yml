@@ -10,16 +10,6 @@ jobs:
     name: Build and Analyze
     runs-on: ubuntu-latest
 
-    services:
-      sonarqube:
-        image: sonarqube:latest
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd="curl -f http://localhost:9000/api/system/health | grep -q UP || exit 1"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=20
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -37,14 +27,11 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Wait for SonarQube to be ready
+      - name: Verify SonarQube is reachable
         run: |
-          echo "Waiting for SonarQube to be ready..."
-          until curl -sS http://localhost:9000/api/system/health | grep -q "UP"; do
-            echo "SonarQube is not ready yet. Retrying in 5 seconds..."
-            sleep 5
-          done
-          echo "SonarQube is ready."
+          echo "Checking if SonarQube is running at ${{ secrets.SONAR_HOST_URL }}..."
+          curl -f "${{ secrets.SONAR_HOST_URL }}/api/system/health" | grep -q "UP" || (echo "SonarQube is not running or reachable!" && exit 1)
+          echo "SonarQube is running."
 
       - name: Install SonarQube scanner
         run: npm install -g sonar-scanner
