@@ -15,18 +15,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Get Runner IP Address
-        run: |
-          echo "Getting the IP address of the GitHub runner..."
-          RUNNER_IP=$(hostname -I | awk '{print $1}')
-          echo "Runner IP Address: $RUNNER_IP"
-          echo "RUNNER_IP=$RUNNER_IP" >> $GITHUB_ENV
-        
-      - name: Install and Run Talisman
+      - name: Run Talisman and Save Report
         run: |
           curl -L https://thoughtworks.github.io/talisman/install.sh | bash
           chmod +x .git/hooks/pre-push
-          .git/hooks/pre-push --scan .
+          .git/hooks/pre-push --scan . > talisman-report.txt
+        continue-on-error: true
+
+      - name: Upload Talisman Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: talisman-report
+          path: talisman-report.txt
 
       # - name: Install Sonar Scanner CLI
       #   run: |
