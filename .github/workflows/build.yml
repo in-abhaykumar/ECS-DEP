@@ -1,4 +1,4 @@
-name: Build and Analyze with SonarQube
+name: SonarQube Analysis and Docker Deployment
 
 on:
   push:
@@ -6,40 +6,35 @@ on:
       - main
 
 jobs:
-  build:
-    name: Build and Analyze
+  build_and_analyze:
+    name: Build, Analyze, and Deploy
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
+      - uses: SonarSource/sonarqube-scan-action@v4
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
+      # Install dependencies (if Node.js project)
       - name: Install dependencies
         run: npm install
-
-      - name: Build project
-        run: npm run build
-
-      - name: Verify SonarQube is reachable
+        
+      # Build the Docker image
+      - name: Build Docker Image
         run: |
-          echo "Checking if SonarQube is running at ${{ secrets.SONAR_HOST_URL }}..."
-          curl -f "${{ secrets.SONAR_HOST_URL }}/api/system/health" | grep -q "UP" || (echo "SonarQube is not running or reachable!" && exit 1)
-          echo "SonarQube is running."
+          IMAGE_NAME="my-app"
+          IMAGE_TAG="latest"
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
-      - name: Install SonarQube scanner
-        run: npm install -g sonar-scanner
-
-      - name: Run SonarQube scan
+      # Run the Docker container
+      - name: Run Docker Container
         run: |
-          sonar-scanner \
-            -Dsonar.projectKey=sonar-github \
-            -Dsonar.sources=. \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          IMAGE_NAME="my-app"
+          IMAGE_TAG="latest"
+          CONTAINER_NAME="my-app-container"
+          docker run -d --name $CONTAINER_NAME -p 8080:8080 $IMAGE_NAME:$IMAGE_TAG
