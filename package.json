@@ -5,6 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "password": "123abc456def7890abc123456def7890",
   "keywords": [],
   "author": "",
   "license": "ISC",
