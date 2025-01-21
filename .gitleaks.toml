@@ -1,0 +1,4 @@
+[[rules]]
+id = "custom-rule"
+description = "My custom secret"
+regex = "(?i)(mySuperSecretKey)[^a-zA-Z0-9]*([a-f0-9]{32})"
