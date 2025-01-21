@@ -3,7 +3,7 @@ name: SonarQube Analysis and Docker Deployment
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   build_and_analyze:
