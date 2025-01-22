@@ -2,7 +2,7 @@ name: CI Pipeline with Security Scan
 on:
   push:
     branches:
-      - main
+      - master
 jobs:
   build:
     name: Build and Test
